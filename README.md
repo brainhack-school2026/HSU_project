@@ -28,15 +28,15 @@ Currently, stateMDS quantifies and visualizes the dynamic trajectories of brain 
 The goal of this project is to turn my current analyses into a **fully reproducible, automated pipeline**.
 
 #### 📍 Primary Objective
-> Build a master shell script (`run_stateMDS.sh`) that takes a pre-extracted matrix of voxels × time points (saved as a `.csv` file) and automatically executes the entire R-based pipeline. 
+> Build a master shell script (`run_stateMDS.sh`) that takes a pre-extracted matrix of time points × voxels (saved as a `.csv` file) and automatically executes the entire R-based pipeline. 
 
 This includes:
 * Performing Multidimensional Scaling (MDS)
 * Calculating geometric and dynamic brain indices (Velocity, Convex Hull Area, Grid Entropy, and Laminarity)
-* Generating all corresponding plots without manual intervention
+* Generating all corresponding results and plots without manual intervention
 
 #### 🚀 Stretch Goals (If time allows)
-1. **Upstream Integration:** Incorporate the MATLAB-based voxel extraction script (`catCarryingVoxel.m`) directly into the shell script so the pipeline can accept raw/preprocessed 4D NIfTI volumes.
+1. **Upstream Integration:** Incorporate the MATLAB-based voxel extraction script (`catCarryingVoxel.m`) directly into the shell script so the pipeline can accept preprocessed 4D NIfTI volumes.
 2. **Open Data Application:** Test the end-to-end pipeline by pulling preprocessed data from open online repositories.
 3. **Mask Generation:** Automate the creation of subject-space ROI masks required for the voxel extraction step.
 
@@ -47,7 +47,7 @@ The core concept of this methodology relies on evaluating brain activity as a dy
 
 * **Functional State:** The spatial pattern of multi-voxel BOLD signal intensities captured at a single time point ($TR$) within a predefined network or ROI.
 * **State Transition:** The temporal change in this multi-voxel pattern. By quantifying frame-by-frame changes, we capture the continuous trajectory of a network’s activity.
-* **Dimensionality Reduction:** Because voxel-wise patterns are highly dimensional, Multidimensional Scaling (MDS) is used to project these states into a lower-dimensional space (e.g., 2D or 3D).
+* **Dimensionality Reduction:** Because voxel-wise patterns are highly dimensional, Multidimensional Scaling (MDS) is used to project these states into a lower-dimensional space (e.g., 2D, 3D or higher).
 
 From these lower-dimensional trajectories, we compute advanced spatial and temporal indices—such as the "arrow distance" (mean velocity) between states, Grid Entropy (GE) for state-space occupancy, and Laminarity (LAM) for state recurrence. This framework is atlas-agnostic and can be applied to any network of interest.
 
@@ -55,7 +55,7 @@ From these lower-dimensional trajectories, we compute advanced spatial and tempo
 
 ### 📁 Data
 Depending on the project phase, the pipeline utilizes:
-* **Primary Input:** Voxel-wise fMRI time series data formatted as a `voxels × time` CSV file.
+* **Primary Input:** Voxel-wise fMRI time series data formatted as a `time × voxels` CSV file.
 * **Stretch Goal Input:** Preprocessed 4D EPI volumes (`.nii`) and corresponding network/ROI masks (e.g., AAL3, DiFuMo).
 
 ---
