@@ -32,7 +32,7 @@ The goal of this project is to turn my current analyses into a **fully reproduci
 
 This includes:
 * Performing Multidimensional Scaling (MDS)
-* Calculating geometric and dynamic brain indices (Velocity, Convex Hull Area, Grid Entropy, and Laminarity)
+* Calculating geometric and dynamic brain indices (Mean Velocity, Convex Hull Area, Grid Entropy, and Laminarity)
 * Generating all corresponding results and plots without manual intervention
 
 #### 🚀 Stretch Goals (If time allows)
