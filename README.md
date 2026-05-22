@@ -51,6 +51,18 @@ The core concept of this methodology relies on evaluating brain activity as a dy
 
 From these lower-dimensional trajectories, we compute advanced spatial and temporal indices—such as the "arrow distance" (mean velocity) between states, Grid Entropy (GE) for state-space occupancy, and Laminarity (LAM) for state recurrence. This framework is atlas-agnostic and can be applied to any network of interest.
 
+### 📊 Schematic of Functional State Indices
+
+To quantify the dynamic trajectory of brain states in the lower-dimensional MDS space, we calculate several topological and dynamic indices:
+
+<p align="center">
+  <img src="assets/indices_schematic.pdf" alt="Schematic representation of topological and dynamic functional state indices" width="800">
+</p>
+
+* **Arrow Distance (Velocity):** The step-by-step Euclidean distance between consecutive TRs, representing the speed of state transition.
+* **Convex Hull Area (CHA):** A topological measure of the total state-space volume explored by the network over the scan duration.
+* **Grid Entropy (GE):** A measure of state-space distribution and occupancy. High entropy indicates a diverse, widely varying sequence of states, while low entropy indicates the brain remained in a highly repetitive or constrained state.
+* **Laminarity (LAM):** Derived from Recurrence Quantification Analysis (RQA), indicating the tendency of the brain to get "stuck" in a specific state before transitioning.
 ---
 
 ### 📁 Data
