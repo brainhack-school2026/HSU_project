@@ -18,7 +18,7 @@ Here is our recent paper on functional state transition on Default Mode Network 
 ## 📊 Project Presentation
 
 ### 📌 Introduction
-This project is developed as part of the **BrainHack School**. It focuses on transforming an existing neuroimaging analysis framework—`stateMDS`—into a streamlined, open-source tool. 
+This project focuses on transforming an existing neuroimaging analysis framework—`stateMDS`—into a streamlined, open-source tool. 
 
 Currently, stateMDS quantifies and visualizes the dynamic trajectories of brain network states using resting-state fMRI (rsfMRI) data. However, the current workflow requires manual execution across different software environments. This project bridges that gap, making the methodology easily accessible, reproducible, and ready for deployment on local machines or computing clusters.
 
@@ -49,6 +49,13 @@ The core concept of this methodology relies on evaluating brain activity as a dy
 * **State Transition:** The temporal change in this multi-voxel pattern. By quantifying frame-by-frame changes, we capture the continuous trajectory of a network’s activity.
 * **Dimensionality Reduction:** Because voxel-wise patterns are highly dimensional, Multidimensional Scaling (MDS) is used to project these states into a lower-dimensional space (e.g., 2D, 3D or higher).
 
+<p align="center">
+  <img src="assets/transition_arrows.png" alt="Example of 2D state space trajectory with transition arrows" width="350">
+</p>
+<p align="center">
+  <em>Example of a 2D state space trajectory. The arrows represent step-by-step transitions (velocity) between functional states over time.</em>
+</p>
+
 From these lower-dimensional trajectories, we compute advanced spatial and temporal indices—such as the "arrow distance" (mean velocity) between states, Grid Entropy (GE) for state-space occupancy, and Laminarity (LAM) for state recurrence. This framework is atlas-agnostic and can be applied to any network of interest.
 
 ### 📊 Schematic of Functional State Indices
@@ -56,13 +63,14 @@ From these lower-dimensional trajectories, we compute advanced spatial and tempo
 To quantify the dynamic trajectory of brain states in the lower-dimensional MDS space, we calculate several topological and dynamic indices:
 
 <p align="center">
-  <img src="assets/indices_schematic.pdf" alt="Schematic representation of topological and dynamic functional state indices" width="800">
+  <img src="assets/indices_schematic.png" alt="Schematic representation of topological and dynamic functional state indices" width="350">
 </p>
 
-* **Arrow Distance (Velocity):** The step-by-step Euclidean distance between consecutive TRs, representing the speed of state transition.
-* **Convex Hull Area (CHA):** A topological measure of the total state-space volume explored by the network over the scan duration.
-* **Grid Entropy (GE):** A measure of state-space distribution and occupancy. High entropy indicates a diverse, widely varying sequence of states, while low entropy indicates the brain remained in a highly repetitive or constrained state.
-* **Laminarity (LAM):** Derived from Recurrence Quantification Analysis (RQA), indicating the tendency of the brain to get "stuck" in a specific state before transitioning.
+
+* **(A) Mean Velocity (MV):** The step-by-step Euclidean distance between consecutive TRs, representing the speed of state transition.
+* **(A) Convex Hull Area (CHA):** A topological measure of the total state-space volume explored by the network over the scan duration.
+* **(B) Grid Entropy (GE):** A measure of state-space distribution and occupancy. High entropy indicates a diverse, widely varying sequence of states, while low entropy indicates the brain remained in a highly repetitive or constrained state.
+* **(C)Laminarity (LAM):** Derived from Recurrence Quantification Analysis (RQA), indicating the tendency of the brain to get "stuck" in a specific state before transitioning.
 ---
 
 ### 📁 Data
