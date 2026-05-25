@@ -80,8 +80,42 @@ Depending on the project phase, the pipeline utilizes:
 
 ---
 
+### 🔮 Future Architecture: giga_connectome Integration
+
+While the current pipeline relies on MATLAB for initial voxel extraction, the ultimate vision for **stateMDS** is to become a 100% open-source, BIDS-compliant application. 
+
+To achieve this, future versions will integrate tightly with [`giga_connectome`](https://github.com/SIMEXP/giga_connectome), a lightweight BIDS-App designed for high-throughput time series extraction.
+
+#### The Unified Open-Source Workflow
+By shifting upstream processing to `giga_connectome`, the pipeline will eliminate proprietary software dependencies and seamlessly handle spatial transformations.
+
+1. **Stage 1: Preprocessing (fMRIPrep)** * Outputs cleaned, standardized 4D NIfTI volumes.
+2. **Stage 2: Time Series Extraction (giga_connectome)**
+   * Takes fMRIPrep derivatives and applies standard atlases (e.g., DiFuMo, Schaefer).
+   * Outputs clean `time × regions` TSV files ready for dynamic analysis.
+3. **Stage 3: Dynamic State Analysis (stateMDS)**
+   * The `run_stateMDS.sh` script ingests the TSV files.
+   * R executes MDS, computes dynamic indices (Velocity, CHA, GE, LAM), and generates automated trajectory plots.
+
+#### Proposed Shell Implementation
+Future iterations of `run_stateMDS.sh` will act as a wrapper to execute both tools sequentially on a computing cluster:
+
+```bash
+# 1. Extract standardized time series
+giga_connectome \
+  --bids_dir /data/raw \
+  --derivatives_dir /data/fmriprep \
+  --output_dir /data/giga_output \
+  --atlas DiFuMo1024
+
+# 2. Run stateMDS on the extracted TSV
+EXTRACTED_TSV="/data/giga_output/sub-01/func/sub-01_task-rest_atlas-DiFuMo_timeseries.tsv"
+Rscript R/run_mds_analysis.R --input "$EXTRACTED_TSV" --output_dir "output/"
+
+
 ### 🛠️ Tools
 * **Bash / Shell Scripting:** For wrapping the pipeline, handling command-line arguments, and managing file routing.
 * **R & RStudio:** The core analytical engine for MDS computation, index calculation (`vegan`, `geometry`, `entropy`), and visualization (`ggplot2`, `plotly`).
-* **MATLAB & SPM12:** *(Stretch Goal)* For handling NIfTI volumes and extracting voxel-wise values.
+* **MATLAB & SPM12:** *(Current Upstream)* For handling NIfTI volumes and extracting voxel-wise values via `catCarryingVoxel.m`.
+* **Python & giga_connectome:** *(Future Architecture)* A BIDS-compliant App used for standardized time series extraction, which will eventually replace the MATLAB dependencies.
 * **Git / GitHub:** For version control, open-source distribution, and project documentation.
