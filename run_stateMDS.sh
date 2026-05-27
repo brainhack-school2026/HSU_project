@@ -1,68 +1,77 @@
 #!/bin/bash
 
-# Exit immediately if a command exits with a non-zero status
+# Exit immediately if a command crashes
 set -e
 
-# --- 1. HELP MENU FUNCTION ---
+# ==========================================
+# 1. HELP MENU FUNCTION
+# ==========================================
 show_help() {
-    echo "Usage: ./run_stateMDS.sh [-i input_matrix.tsv] [-o output_directory]"
+    echo "Usage: ./run_stateMDS.sh [Options]"
     echo ""
     echo "Options:"
-    echo "  -i  Path to the time x voxels TSV file (Required)"
-    echo "  -o  Path to the main output directory (Default: ./output)"
+    echo "  -d  Input directory containing TSV/CSV files (Default: data/voxels)"
+    echo "  -o  Main output directory (Default: output)"
+    echo "  -t  Maximum TRs to analyze per subject (Default: 180)"
+    echo "  -s  Maximum acceptable stress value (Default: 0.15)"
+    echo "  -k  Maximum dimension to test (Default: 10)"
     echo "  -h  Show this help message"
     exit 0
 }
 
-# Initialize default variables
-INPUT_FILE=""
-OUTPUT_DIR="$(pwd)/output"
+# ==========================================
+# 2. DEFAULT VARIABLES
+# ==========================================
+INPUT_DIR="data/voxels"
+OUTPUT_DIR="output"
+MAX_TR=180
+STRESS=0.15
+MAX_DIM=10
 
-# --- 2. PARSE COMMAND LINE ARGUMENTS ---
-while getopts "i:o:h" opt; do
+# ==========================================
+# 3. PARSE COMMAND LINE ARGUMENTS
+# ==========================================
+while getopts "d:o:t:s:k:h" opt; do
     case "$opt" in
-        i) INPUT_FILE="$OPTARG" ;;
+        d) INPUT_DIR="$OPTARG" ;;
         o) OUTPUT_DIR="$OPTARG" ;;
+        t) MAX_TR="$OPTARG" ;;
+        s) STRESS="$OPTARG" ;;
+        k) MAX_DIM="$OPTARG" ;;
         h) show_help ;;
         *) show_help ;;
     esac
 done
 
-# Check if required input file was provided
-if [ -z "$INPUT_FILE" ]; then
-    echo "Error: Missing required input file (-i)."
-    show_help
-fi
-
+# ==========================================
+# 4. PIPELINE EXECUTION
+# ==========================================
 echo "========================================================="
-echo " Starting stateMDS Pipeline"
+echo " 🚀 Starting stateMDS Pipeline"
 echo "========================================================="
-echo "Input Matrix:  $INPUT_FILE"
-echo "Output Folder: $OUTPUT_DIR"
-
-# --- 3. CREATE OUTPUT DIRECTORIES ---
-# This ensures R never crashes due to a missing folder structure
-echo "Initializing directory tree..."
-mkdir -p "$OUTPUT_DIR/MDSpoint"
-mkdir -p "$OUTPUT_DIR/arrowdis"
-mkdir -p "$OUTPUT_DIR/plots/2d_trajectories"
-mkdir -p "$OUTPUT_DIR/plots/ge_heatmaps"
-mkdir -p "$OUTPUT_DIR/plots/LAM_plots"
-
-# --- 4. RUN R SCRIPTS SEQUENTIALLY ---
-# We use Rscript to run R directly from the command line.
-# We pass the input file and output directory as arguments directly into R.
-
-echo "Step 1: Running Multidimensional Scaling Analysis..."
-Rscript R/run_mds_analysis.R --input "$INPUT_FILE" --output "$OUTPUT_DIR"
-
-echo "Step 2: Calculating Advanced Brain Indices (CHA, GE, LAM)..."
-Rscript R/run_brain_indices.R --output "$OUTPUT_DIR"
-
-echo "Step 3: Generating Visualizations and Trajectory Plots..."
-Rscript R/visualize_trajectories.R --output "$OUTPUT_DIR"
-
+echo " Input Directory: $INPUT_DIR"
+echo " Output Folder:   $OUTPUT_DIR"
+echo " Settings:        Max TRs: $MAX_TR | Target Stress: <$STRESS | Max Dim: $MAX_DIM"
 echo "========================================================="
-echo " stateMDS Pipeline Completed Successfully!"
+
+# Run Step 1: The New Batch R Script
+echo -e "\n[Step 1/3] Running Batch Multidimensional Scaling Analysis..."
+Rscript R/run_mds_analysis.R \
+    --input_dir "$INPUT_DIR" \
+    --output_dir "$OUTPUT_DIR" \
+    --max_tr "$MAX_TR" \
+    --stress "$STRESS" \
+    --max_dim "$MAX_DIM"
+
+# Run Step 2: Brain Indices (Placeholders for your next steps)
+# echo -e "\n[Step 2/3] Calculating Advanced Brain Indices (CHA, GE, LAM)..."
+# Rscript R/run_brain_indices.R --output_dir "$OUTPUT_DIR"
+
+# Run Step 3: Visualization
+# echo -e "\n[Step 3/3] Generating Visualizations and Trajectory Plots..."
+# Rscript R/visualize_trajectories.R --output_dir "$OUTPUT_DIR"
+
+echo -e "\n========================================================="
+echo " ✅ stateMDS Pipeline Completed Successfully!"
 echo " All results saved to: $OUTPUT_DIR"
 echo "========================================================="
