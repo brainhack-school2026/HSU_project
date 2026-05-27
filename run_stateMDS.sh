@@ -54,7 +54,7 @@ echo " Output Folder:   $OUTPUT_DIR"
 echo " Settings:        Max TRs: $MAX_TR | Target Stress: <$STRESS | Max Dim: $MAX_DIM"
 echo "========================================================="
 
-# Run Step 1: The New Batch R Script
+# Run Step 1: MDS Analysis
 echo -e "\n[Step 1/3] Running Batch Multidimensional Scaling Analysis..."
 Rscript R/run_mds_analysis.R \
     --input_dir "$INPUT_DIR" \
@@ -68,8 +68,8 @@ echo -e "\n[Step 2/3] Calculating Advanced Brain Indices (CHA, GE, LAM)..."
 Rscript R/run_brain_indices.R --output_dir "$OUTPUT_DIR"
 
 # Run Step 3: Visualization
-# echo -e "\n[Step 3/3] Generating Visualizations and Trajectory Plots..."
-# Rscript R/visualize_trajectories.R --output_dir "$OUTPUT_DIR"
+echo -e "\n[Step 3/3] Generating Visualizations and Trajectory Plots..."
+Rscript R/visualize_trajectories.R --output_dir "$OUTPUT_DIR"
 
 echo -e "\n========================================================="
 echo " ✅ stateMDS Pipeline Completed Successfully!"
