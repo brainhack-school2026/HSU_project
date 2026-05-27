@@ -59,15 +59,31 @@ get_convex_hull_volume <- function(coords_mat) {
 
 get_grid_entropy <- function(coords_mat, bins_per_dim = 5) {
   n_points <- nrow(coords_mat)
+  n_dim <- ncol(coords_mat) # Extract the dimension count
+  
+  # Normalize coordinates to 0-1 range
   norm_coords <- apply(coords_mat, 2, function(x) (x - min(x)) / (max(x) - min(x)))
+  
+  # Bin the data
   binned_data <- apply(norm_coords, 2, function(x) {
     cut(x, breaks = bins_per_dim, labels = FALSE, include.lowest = TRUE)
   })
+  
+  # Identify unique grid states
   grid_states <- apply(binned_data, 1, paste, collapse = "_")
   counts <- table(grid_states)
   
+  # Calculate raw Shannon entropy
   raw_entropy <- entropy(counts, unit = "log")
-  norm_entropy <- raw_entropy / log(n_points)
+  
+  # NORMALIZATION: Max entropy is bounded by either the number of TRs 
+  # or the total number of available bins in that specific D-dimensional space.
+  total_possible_bins <- bins_per_dim^n_dim
+  max_possible_states <- min(n_points, total_possible_bins)
+  max_entropy <- log(max_possible_states)
+  
+  # Calculate normalized entropy (0 to 1)
+  norm_entropy <- raw_entropy / max_entropy
   
   return(list(raw = raw_entropy, norm = norm_entropy))
 }
