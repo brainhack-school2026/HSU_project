@@ -144,38 +144,36 @@ Depending on the project phase, the pipeline utilizes:
 
 ---
 
-### 🔮 Future Architecture: giga_connectome Integration
+### 🔮 Future Architecture: Python & Nilearn Integration
 
-While the current pipeline relies on MATLAB for initial voxel extraction, the ultimate vision for **stateMDS** is to become a 100% open-source, BIDS-compliant application. 
+While the current pipeline relies on MATLAB for initial voxel extraction, the ultimate vision for **stateMDS** is to become a 100% open-source application using Python. 
 
-To achieve this, future versions will integrate tightly with [`giga_connectome`](https://github.com/SIMEXP/giga_connectome), a lightweight BIDS-App designed for high-throughput time series extraction.
+By shifting upstream processing to `nilearn`, the pipeline will eliminate proprietary software dependencies and smoothly bridge the gap between BIDS-compliant preprocessing and our dynamic state analysis.
 
 #### The Unified Open-Source Workflow
-By shifting upstream processing to `giga_connectome`, the pipeline will eliminate proprietary software dependencies and seamlessly handle spatial transformations.
 
 * **Stage 1: Preprocessing (fMRIPrep)** - Outputs cleaned, standardized 4D NIfTI volumes.
-* **Stage 2: Time Series Extraction (giga_connectome)** - Takes fMRIPrep derivatives and applies standard atlases (e.g., DiFuMo, Schaefer). Outputs clean `time × regions` TSV files ready for dynamic analysis.
-* **Stage 3: Dynamic State Analysis (stateMDS)** - The `run_stateMDS.sh` script ingests the TSV files. R executes MDS, computes dynamic indices (Velocity, CHA, GE, LAM), and generates automated trajectory plots.
+* **Stage 2: Voxel-wise Time Series Extraction (Python/Nilearn)** - Uses `nilearn.maskers.NiftiMasker` to apply network/grey matter masks, detrend the signal, and output a clean `time × voxels` CSV file.
+* **Stage 3: Dynamic State Analysis (stateMDS)** - The `run_stateMDS.sh` script ingests the CSV files. R executes NMDS, computes dynamic indices (Velocity, CHA, GE, LAM), and generates automated trajectory plots.
 
 #### Proposed Shell Implementation
 Future iterations of `run_stateMDS.sh` will act as a wrapper to execute both tools sequentially on a computing cluster:
 
 ```bash
-# 1. Extract standardized time series
-giga_connectome \
-  --bids_dir /data/raw \
-  --derivatives_dir /data/fmriprep \
-  --output_dir /data/giga_output \
-  --atlas DiFuMo1024
+# 1. Extract standardized voxel-wise time series using Nilearn
+python extract_voxels.py \
+  --input /data/fmriprep/sub-01/func/sub-01_task-rest_space-MNI152_desc-preproc_bold.nii.gz \
+  --mask /data/masks/dmn_mask.nii.gz \
+  --output /data/nilearn_output/sub-01_voxels.csv
 
-# 2. Run stateMDS on the extracted TSV
-EXTRACTED_TSV="/data/giga_output/sub-01/func/sub-01_task-rest_atlas-DiFuMo_timeseries.tsv"
-Rscript R/run_mds_analysis.R --input "$EXTRACTED_TSV" --output_dir "output/"
+# 2. Run stateMDS on the extracted CSV
+EXTRACTED_CSV="/data/nilearn_output/sub-01_voxels.csv"
+./run_stateMDS.sh -d $(dirname "$EXTRACTED_CSV") -o output_optimal
 ```
 
 ### 🛠️ Tools
 * **Bash / Shell Scripting:** For wrapping the pipeline, handling command-line arguments, and managing file routing.
-* **R & RStudio:** The core analytical engine for MDS computation, index calculation (`vegan`, `geometry`, `entropy`), and visualization (`ggplot2`, `plotly`).
+* **R & RStudio:** The core analytical engine for NMDS computation, index calculation (`vegan`, `geometry`, `entropy`), and visualization (`ggplot2`, `fields`).
 * **MATLAB & SPM12:** *(Current Upstream)* For handling NIfTI volumes and extracting voxel-wise values via `catCarryingVoxel.m`.
-* **Python & giga_connectome:** *(Future Architecture)* A BIDS-compliant App used for standardized time series extraction, which will eventually replace the MATLAB dependencies.
+* **Python & Nilearn:** *(Future Architecture)* For applying grey matter masks, detrending, and voxel-level signal extraction (`NiftiMasker`), which will eventually replace the MATLAB dependencies.
 * **Git / GitHub:** For version control, open-source distribution, and project documentation.
