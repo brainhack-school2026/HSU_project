@@ -63,9 +63,9 @@ Rscript R/run_mds_analysis.R \
     --stress "$STRESS" \
     --max_dim "$MAX_DIM"
 
-# Run Step 2: Brain Indices (Placeholders for your next steps)
-# echo -e "\n[Step 2/3] Calculating Advanced Brain Indices (CHA, GE, LAM)..."
-# Rscript R/run_brain_indices.R --output_dir "$OUTPUT_DIR"
+# Run Step 2: Brain Indices
+echo -e "\n[Step 2/3] Calculating Advanced Brain Indices (CHA, GE, LAM)..."
+Rscript R/run_brain_indices.R --output_dir "$OUTPUT_DIR"
 
 # Run Step 3: Visualization
 # echo -e "\n[Step 3/3] Generating Visualizations and Trajectory Plots..."
