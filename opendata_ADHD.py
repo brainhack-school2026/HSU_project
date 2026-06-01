@@ -14,7 +14,7 @@ from nilearn.maskers import NiftiMasker
 ATLAS = "schaefer" 
 TARGET_ROI = "Default" 
 INPUT_DIR = "data/voxels"
-OUTPUT_DIR = "output_stateMDS"
+OUTPUT_DIR = "output_adhd"
 TARGET_TR = 2.0  
 
 # ==========================================
