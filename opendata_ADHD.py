@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import subprocess
 import nibabel as nib
 from nilearn import datasets, image
@@ -12,7 +13,7 @@ ATLAS = "schaefer"
 TARGET_ROI = "Default" 
 INPUT_DIR = "data/voxels"
 OUTPUT_DIR = "output_stateMDS"
-TARGET_TR = 2.0  # The strict TR requirement
+TARGET_TR = 2.0  
 
 os.makedirs(INPUT_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -21,7 +22,6 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # STEP 1: Fetch and Filter ADHD Cohort by TR
 # ==========================================
 print(f"Fetching ADHD-200 Dataset pool...")
-# Fetch all 40 subjects to ensure we have enough pool to find TR=2.0
 dataset = datasets.fetch_adhd(n_subjects=40)
 
 valid_controls = []
@@ -30,23 +30,19 @@ valid_patients = []
 print(f"Scanning NIfTI headers for subjects with TR = {TARGET_TR}s...")
 
 for idx, func_file in enumerate(dataset.func):
-    # Read the NIfTI header directly to get the true TR
     img_header = nib.load(func_file).header
-    # get_zooms() returns (x, y, z, TR)
     actual_tr = img_header.get_zooms()[3]
     
-    # Round to 2 decimal places to avoid floating point quirks (e.g., 2.000001)
     if round(actual_tr, 2) == TARGET_TR:
-        pheno = dataset.phenotypic[idx]
+        # THE FIX: Use .iloc[idx] because phenotypic is a Pandas DataFrame
+        pheno = dataset.phenotypic.iloc[idx]
         diagnosis = pheno['adhd']
         
-        # Add to the correct group if we don't have 10 yet
         if diagnosis == 0 and len(valid_controls) < 10:
             valid_controls.append(idx)
         elif diagnosis == 1 and len(valid_patients) < 10:
             valid_patients.append(idx)
             
-    # Stop scanning if we found our 20 subjects
     if len(valid_controls) == 10 and len(valid_patients) == 10:
         break
 
@@ -62,7 +58,6 @@ if ATLAS == "schaefer":
     atlas = datasets.fetch_atlas_schaefer_2018(n_rois=100, yeo_networks=7, resolution_mm=2)
     atlas_img, labels = atlas.maps, atlas.labels
     
-    # THE FIX: Safely convert every label to a string, regardless of Nilearn version
     target_indices = [
         i + 1 for i, label in enumerate(labels) 
         if TARGET_ROI in (label.decode('utf-8') if isinstance(label, bytes) else str(label))
@@ -78,7 +73,6 @@ elif ATLAS == "aal":
 else:
     raise ValueError("Atlas not supported. Choose 'schaefer' or 'aal'.")
 
-# Create the binary mask
 print(f"Building mask for ROI: {TARGET_ROI}...")
 roi_mask = image.math_img(f"np.isin(img, {target_indices})", img=atlas_img)
 
@@ -88,10 +82,20 @@ roi_mask = image.math_img(f"np.isin(img, {target_indices})", img=atlas_img)
 n_trs_detected = 0 
 
 for idx in cohort_indices:
-    subject_id = dataset.phenotypic[idx]['Subject']
-    diagnosis = "ADHD" if dataset.phenotypic[idx]['adhd'] == 1 else "CTRL"
+    # THE FIX: Use .iloc[idx] here as well
+    pheno = dataset.phenotypic.iloc[idx]
+    subject_id = pheno['Subject']
+    diagnosis = "ADHD" if pheno['adhd'] == 1 else "CTRL"
     
-    sub_str = subject_id.decode('utf-8') if isinstance(subject_id, bytes) else str(subject_id)
+    # Robust string conversion to prevent Pandas from dropping leading zeros
+    if isinstance(subject_id, bytes):
+        sub_str = subject_id.decode('utf-8')
+    else:
+        sub_str = str(subject_id)
+        
+    if sub_str.isdigit():
+        sub_str = sub_str.zfill(7) # Forces it back to 7 digits (e.g., 0010042)
+        
     file_prefix = f"sub-{sub_str}_{diagnosis}"
     
     print(f"\nProcessing {file_prefix}...")
@@ -105,7 +109,7 @@ for idx in cohort_indices:
         detrend=True,
         high_pass=0.01,
         low_pass=0.08,
-        t_r=TARGET_TR,  # We can safely hardcode this now!
+        t_r=TARGET_TR,
         memory='nilearn_cache',
         verbose=0 
     )
