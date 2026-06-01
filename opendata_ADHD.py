@@ -32,8 +32,8 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # ==========================================
 # STEP 1: Fetch and Clean Phenotypic Data
 # ==========================================
-print("\nFetching ADHD-200 Dataset pool (40 subjects)...")
-dataset = datasets.fetch_adhd(n_subjects=40)
+print("\nFetching ADHD-200 Dataset pool (100 subjects)...")
+dataset = datasets.fetch_adhd(n_subjects=100)
 
 if isinstance(dataset.phenotypic, list) and len(dataset.phenotypic) > 0 and isinstance(dataset.phenotypic[0], str):
     pheno_df = pd.read_csv(dataset.phenotypic[0])
