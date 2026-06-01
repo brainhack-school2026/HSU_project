@@ -80,15 +80,15 @@ for idx in all_fetched_indices:
             diagnosis_code = int(pheno_df.iloc[idx].get('adhd', 0))
         
         # Add to cohort if we need them
-        if diagnosis_code == 0 and len(valid_controls) < 10:
+        if diagnosis_code == 0 and len(valid_controls) < 6:
             valid_controls.append((idx, sub_id, "CTRL", func_file))
             if num_volumes < global_min_volumes: global_min_volumes = num_volumes
                 
-        elif diagnosis_code == 1 and len(valid_patients) < 10:
+        elif diagnosis_code == 1 and len(valid_patients) < 6:
             valid_patients.append((idx, sub_id, "ADHD", func_file))
             if num_volumes < global_min_volumes: global_min_volumes = num_volumes
             
-    if len(valid_controls) == 10 and len(valid_patients) == 10:
+    if len(valid_controls) == 6 and len(valid_patients) == 6:
         break
 
 cohort_list = valid_controls + valid_patients
