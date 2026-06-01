@@ -1,8 +1,10 @@
 import os
+import shutil
 import numpy as np
 import pandas as pd
 import subprocess
 import nibabel as nib
+from datetime import datetime
 from nilearn import datasets, image
 from nilearn.maskers import NiftiMasker
 
@@ -15,16 +17,24 @@ INPUT_DIR = "data/voxels"
 OUTPUT_DIR = "output_stateMDS"
 TARGET_TR = 2.0  
 
+# ==========================================
+# STEP 0: Intelligent Folder Archiving (Q2)
+# ==========================================
+if os.path.exists(INPUT_DIR) and len(os.listdir(INPUT_DIR)) > 0:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    archive_dir = f"data/voxels_archive_{timestamp}"
+    os.rename(INPUT_DIR, archive_dir)
+    print(f"📁 Archived old voxel files to: {archive_dir}")
+
 os.makedirs(INPUT_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ==========================================
 # STEP 1: Fetch and Clean Phenotypic Data
 # ==========================================
-print("Fetching ADHD-200 Dataset pool...")
+print("\nFetching ADHD-200 Dataset pool (40 subjects)...")
 dataset = datasets.fetch_adhd(n_subjects=40)
 
-# Make it bulletproof: Handle Nilearn returning paths, lists, or arrays
 if isinstance(dataset.phenotypic, list) and len(dataset.phenotypic) > 0 and isinstance(dataset.phenotypic[0], str):
     pheno_df = pd.read_csv(dataset.phenotypic[0])
 elif isinstance(dataset.phenotypic, str):
@@ -32,65 +42,84 @@ elif isinstance(dataset.phenotypic, str):
 else:
     pheno_df = pd.DataFrame(dataset.phenotypic)
 
-# Standardize column names (lowercase) to avoid 'Subject' vs 'subject' errors
 pheno_df.columns = [str(c).lower() for c in pheno_df.columns]
 
-# Decode byte-strings to normal text
 for col in pheno_df.columns:
     if pheno_df[col].dtype == object:
         pheno_df[col] = pheno_df[col].apply(lambda x: x.decode('utf-8') if isinstance(x, bytes) else str(x))
 
-# Ensure subject column is formatted strictly as a 7-digit string (e.g., 0010042)
 if 'subject' in pheno_df.columns:
     pheno_df['subject'] = pheno_df['subject'].astype(str).str.zfill(7)
 
 # ==========================================
-# STEP 2: Filter ADHD Cohort by TR
+# STEP 2: Filter by TR and Find Global Minimum Volumes (Q3)
 # ==========================================
 valid_controls = []
 valid_patients = []
+global_min_volumes = float('inf') # Start with infinity, reduce as we find smaller scans
+all_fetched_indices = list(range(len(dataset.func)))
 
-print(f"Scanning NIfTI headers to find 10 Controls and 10 ADHD (TR = {TARGET_TR}s)...")
+print(f"Scanning headers for TR = {TARGET_TR}s and standardizing scan length...")
 
-for idx, func_file in enumerate(dataset.func):
-    # 1. Check the TR
+for idx in all_fetched_indices:
+    func_file = dataset.func[idx]
     img_header = nib.load(func_file).header
+    
+    # get_zooms()[3] is the TR (in seconds), get_data_shape()[3] is the number of volumes
     actual_tr = img_header.get_zooms()[3]
+    num_volumes = img_header.get_data_shape()[3]
     
     if round(actual_tr, 2) == TARGET_TR:
-        # 2. Extract Subject ID directly from the NIfTI file path
         sub_id = os.path.basename(func_file).split('_')[0]
         
-        # 3. Look up this subject in our cleaned dataframe
         if 'subject' in pheno_df.columns:
             subject_row = pheno_df[pheno_df['subject'] == sub_id]
-            if subject_row.empty:
-                continue # Skip if metadata is missing for this file
+            if subject_row.empty: continue 
             diagnosis_code = int(subject_row.iloc[0]['adhd'])
         else:
             diagnosis_code = int(pheno_df.iloc[idx].get('adhd', 0))
         
-        # 4. Sort into the correct cohort
+        # Add to cohort if we need them
         if diagnosis_code == 0 and len(valid_controls) < 10:
-            valid_controls.append((idx, sub_id, "CTRL"))
+            valid_controls.append((idx, sub_id, "CTRL", func_file))
+            if num_volumes < global_min_volumes: global_min_volumes = num_volumes
+                
         elif diagnosis_code == 1 and len(valid_patients) < 10:
-            valid_patients.append((idx, sub_id, "ADHD"))
+            valid_patients.append((idx, sub_id, "ADHD", func_file))
+            if num_volumes < global_min_volumes: global_min_volumes = num_volumes
             
     if len(valid_controls) == 10 and len(valid_patients) == 10:
         break
 
 cohort_list = valid_controls + valid_patients
-print(f"Successfully selected {len(valid_controls)} Controls and {len(valid_patients)} ADHD subjects.")
+cohort_indices = [item[0] for item in cohort_list]
+
+print(f"✅ Selected {len(valid_controls)} Controls and {len(valid_patients)} ADHD subjects.")
+print(f"⏱️  Standardizing all subjects to exactly {global_min_volumes} TRs.")
 
 # ==========================================
-# STEP 3: Fetch Atlas and Build Mask
+# STEP 3: Automatic Garbage Collection (Q1)
 # ==========================================
-print(f"Loading the {ATLAS.upper()} atlas...")
+print("\n🗑️  Cleaning up hard drive (deleting unused subjects from Nilearn cache)...")
+deleted_count = 0
+for idx in all_fetched_indices:
+    if idx not in cohort_indices:
+        try:
+            os.remove(dataset.func[idx])
+            os.remove(dataset.confounds[idx])
+            deleted_count += 1
+        except OSError:
+            pass # File might already be deleted or locked
+print(f"Cleared {deleted_count} unused subjects from your storage.")
+
+# ==========================================
+# STEP 4: Fetch Atlas and Build Mask
+# ==========================================
+print(f"\nLoading the {ATLAS.upper()} atlas...")
 
 if ATLAS == "schaefer":
     atlas = datasets.fetch_atlas_schaefer_2018(n_rois=100, yeo_networks=7, resolution_mm=2)
     atlas_img, labels = atlas.maps, atlas.labels
-    
     target_indices = [
         i + 1 for i, label in enumerate(labels) 
         if TARGET_ROI in (label.decode('utf-8') if isinstance(label, bytes) else str(label))
@@ -102,22 +131,16 @@ elif ATLAS == "aal":
         int(atlas.indices[i]) for i, label in enumerate(labels) 
         if TARGET_ROI in (label.decode('utf-8') if isinstance(label, bytes) else str(label))
     ]
-else:
-    raise ValueError("Atlas not supported. Choose 'schaefer' or 'aal'.")
 
-print(f"Building mask for ROI: {TARGET_ROI}...")
 roi_mask = image.math_img(f"np.isin(img, {target_indices})", img=atlas_img)
 
 # ==========================================
-# STEP 4: Loop Through Cohort & Process
+# STEP 5: Process and Truncate the Matrices
 # ==========================================
-n_trs_detected = 0 
-
-for file_idx, sub_id, diagnosis in cohort_list:
+for file_idx, sub_id, diagnosis, func_file in cohort_list:
     file_prefix = f"sub-{sub_id}_{diagnosis}"
     print(f"\nProcessing {file_prefix}...")
     
-    fmri_img = dataset.func[file_idx]        
     confounds_file = dataset.confounds[file_idx] 
     
     masker = NiftiMasker(
@@ -131,22 +154,23 @@ for file_idx, sub_id, diagnosis in cohort_list:
         verbose=0 
     )
 
-    time_series = masker.fit_transform(fmri_img, confounds=confounds_file)
-    n_trs_detected = time_series.shape[0] 
+    time_series = masker.fit_transform(func_file, confounds=confounds_file)
     
-    print(f" -> Extracted Shape: {n_trs_detected} TRs x {time_series.shape[1]} Voxels")
+    # THE FIX: Slice the matrix to enforce identical lengths across the cohort
+    time_series_truncated = time_series[:global_min_volumes, :]
+    
+    print(f" -> Extracted Shape: {time_series.shape[0]} TRs | Truncated to: {time_series_truncated.shape[0]} TRs")
 
     output_csv = os.path.join(INPUT_DIR, f"{file_prefix}_timeseries.csv")
-    np.savetxt(output_csv, time_series, delimiter=",")
-
-print(f"\nAll subjects successfully processed and saved to {INPUT_DIR}/")
+    np.savetxt(output_csv, time_series_truncated, delimiter=",")
 
 # ==========================================
-# STEP 5: Trigger stateMDS Bash Script
+# STEP 6: Trigger stateMDS Bash Script
 # ==========================================
-print("\nFiring stateMDS pipeline on the cohort...")
+print("\nFiring stateMDS pipeline on the standardized cohort...")
 try:
-    bash_command = f"./run_stateMDS.sh -d {INPUT_DIR} -o {OUTPUT_DIR} -t {n_trs_detected}"
+    # Pass the global minimum as the -t parameter
+    bash_command = f"./run_stateMDS.sh -d {INPUT_DIR} -o {OUTPUT_DIR} -t {global_min_volumes}"
     result = subprocess.run(bash_command, shell=True, check=True, text=True, capture_output=True)
     print(result.stdout)
     
