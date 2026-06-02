@@ -108,7 +108,12 @@ stateMDS/
 ### 🚀 Quick Start
 
 #### Route 1: End-to-End Open Data Pipeline (Recommended)
-Want to test the pipeline immediately without providing your own data? Run the Python master script. It will automatically download the ADHD-200 dataset, find a balanced cohort matching a specific TR, extract the Default Mode Network, standardize the matrix sizes, and seamlessly trigger the R pipeline.
+Want to test the pipeline immediately without providing your own data? Run the Python master ingestion script. Instead of just downloading files, this script acts as an intelligent data manager that preps the data for rigorous mathematical comparison before triggering the analysis:
+
+* **Intelligent Archiving:** Automatically detects if old `.csv` matrices exist in your `data/voxels/` folder and archives them with a timestamp to prevent accidental cohort mixing.
+* **Temporal Standardization:** Because different subjects or scanning sites often have different scan lengths, the script parses the NIfTI headers to find the **global minimum TR count** across your selected cohort. It then slices every extracted matrix to this exact length. This ensures every subject has the exact same temporal opportunity to explore the state space, preventing artificial variance in Velocity or Convex Hull Area (CHA).
+* **Automated Garbage Collection:** Neuroimaging datasets are massive. Once the script successfully finds the target cohort, it actively deletes the unused NIfTI and confound files from your local cache, keeping your hard drive safe from bloat.
+* **Seamless Handoff:** Dynamically passes the standardized TR count directly into the Bash script's `-t` parameter, seamlessly triggering the R-based NMDS pipeline without any manual configuration.
 
 ```bash
 python opendata_ADHD.py
