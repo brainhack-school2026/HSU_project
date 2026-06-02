@@ -159,7 +159,7 @@ for file_idx, sub_id, diagnosis, func_file in cohort_list:
     # THE FIX: Slice the matrix to enforce identical lengths across the cohort
     time_series_truncated = time_series[:global_min_volumes, :]
     
-    print(f" -> Extracted Shape: {time_series.shape[0]} TRs | Truncated to: {time_series_truncated.shape[0]} TRs")
+  print(f" -> Extracted Shape: {time_series.shape[0]} TRs × {time_series.shape[1]} Voxels | Truncated to: {time_series_truncated.shape[0]} TRs × {time_series_truncated.shape[1]} Voxels")
 
     output_csv = os.path.join(INPUT_DIR, f"{file_prefix}_timeseries.csv")
     np.savetxt(output_csv, time_series_truncated, delimiter=",")
