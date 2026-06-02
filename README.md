@@ -148,4 +148,4 @@ Run this to force `k=2` for clean, easily interpretable supplementary figures re
 * **Python & Nilearn:** For dynamic data ingestion, NIfTI header parsing, automated garbage collection, and voxel-level signal extraction (`NiftiMasker`).
 * **Bash / Shell Scripting:** For seamless cross-language routing and command-line parsing.
 * **R & RStudio:** The core analytical engine for NMDS computation, index calculation (`vegan`, `geometry`, `entropy`), and visualization (`ggplot2`).
-* **Legacy (Deprecated):** MATLAB & SPM12. The pipeline is now completely independent of proprietary environments.
+* **Legacy :** MATLAB & SPM12. The pipeline is now completely independent of proprietary environments.
