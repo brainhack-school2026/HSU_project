@@ -31,11 +31,12 @@ df.columns = df.columns.str.strip()
 # ==========================================
 # STEP 2: Run Independent t-tests
 # ==========================================
+# THE FIX: Updated mapping to perfectly match your R script outputs
 metrics = {
-    'Velocity': 'Mean_Velocity', # Change 'Mean_Velocity' if your CSV header is slightly different
-    'Convex Hull Area (CHA)': 'CHA',
-    'Grid Entropy (GE)': 'GE',
-    'Laminarity (LAM)': 'LAM'
+    'Velocity': 'Velocity_Mean', 
+    'Convex Hull Area (CHA)': 'CHA_Norm',
+    'Grid Entropy (GE)': 'GE_Norm',
+    'Laminarity (LAM)': 'LAM_Norm'
 }
 
 print("\n" + "="*45)
