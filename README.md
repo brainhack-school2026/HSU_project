@@ -19,6 +19,9 @@ Here is our recent paper on functional state transitions in the Default Mode Net
 ## 📊 Project Presentation
 
 ### 📌 Introduction
+### 📌 Introduction
+[![View Presentation](https://img.shields.io/badge/View-Slide_Deck-FFB000?style=for-the-badge&logo=googleslides&logoColor=white)](https://docs.google.com/presentation/d/1_d1J1TZeNK03rfZI0mGqD_cQh0j80EoXBdmXZYMazSk/edit?slide=id.g3e76623eb6e_0_461#slide=id.g3e76623eb6e_0_461)
+
 This project focuses on transforming an existing neuroimaging analysis framework—`stateMDS`—into a streamlined, fully open-source tool. 
 
 Currently, `stateMDS` quantifies and visualizes the dynamic trajectories of brain network states using resting-state fMRI (rsfMRI) data. Historically, this workflow required manual execution across proprietary software environments (MATLAB/SPM). This project bridges that gap by integrating Python and `nilearn`, making the methodology entirely open-source, reproducible, and ready for automated deployment on local machines or compute clusters.
