@@ -145,7 +145,7 @@ for file_idx, sub_id, diagnosis, func_file in cohort_list:
     
     masker = NiftiMasker(
         mask_img=roi_mask,
-        standardize=True,
+        standardize='zscore_sample',
         detrend=True,
         high_pass=0.01,
         low_pass=0.08,
